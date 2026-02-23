@@ -176,4 +176,4 @@ if __name__ == "__main__":
     import uvicorn
     # Learned: 0.0.0.0 exposes the server to the network (Docker/External),
     # whereas 127.0.0.1 would lock it to this machine only.
-    uvicorn.run(app, host="0.0.0.0", port=7000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

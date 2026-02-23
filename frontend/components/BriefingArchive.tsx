@@ -52,7 +52,7 @@ export default function BriefingArchive({ onSelectReport }: BriefingArchiveProps
       <div className="flex justify-between items-center mb-4 opacity-70">
         <h2 className="text-sm font-bold flex items-center gap-2">
           <span className="w-2 h-2 bg-terminal rounded-full animate-pulse" /> 
-          ARCHIVE (POSTGRESQL)
+          INTELLIGENCE ARCHIVE
         </h2>
         <button 
           onClick={fetchReports}

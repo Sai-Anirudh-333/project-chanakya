@@ -134,7 +134,7 @@ export default function Home() {
       <header className="flex justify-between items-center mb-8 glass-card p-4 rounded-lg border-l-4 border-terminal">
         <div>
           <h1 className="text-2xl font-bold tracking-widest terminal-text">PROJECT CHANAKYA</h1>
-          <p className="text-xs opacity-50 font-mono tracking-tighter">OSINT / STRATEGIC DECISION SUPPORT / v1.0.0</p>
+          <p className="text-xs opacity-50 font-mono tracking-tighter">OSINT / STRATEGIC DECISION SUPPORT / v1.0</p>
         </div>
         <div className="flex gap-4">
           <div className="flex flex-col items-end">

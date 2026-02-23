@@ -1,19 +1,49 @@
 version: "3.8"
 
 services:
-  db:
+  frontend:
+    build:
+      context: ./frontend
+    container_name: chanakya_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # Inject the API URL at build time so Next.js knows where to fetch!
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    container_name: chanakya_backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Inject the Groq Key from the host's actual .env file
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      # Notice how the URL uses 'chanakya_db' as the hostname! Docker magic!
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@chanakya_db:5432/${POSTGRES_DB:-chanakya}
+    depends_on:
+      - chanakya_db
+  chanakya_db:
     image: postgres:15-alpine
     container_name: chanakya_db
     restart: always
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=postgres
+      - POSTGRES_DB=${POSTGRES_DB:-chanakya}
     ports:
       - "5432:5432"
     volumes:
       # This line ensures your data isn't deleted when the container stops!
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-chanakya}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
