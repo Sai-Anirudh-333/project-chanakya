@@ -5,7 +5,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, AI
 from langchain_groq import ChatGroq
 from pydantic import BaseModel, Field
 import json
-from app.databases.crud import CRUD
+from app.crud.briefings import save_briefing
 from app.databases.db_config import SessionLocal
 
 # Import our Agents
@@ -34,6 +34,7 @@ class AgentState(TypedDict):
     scout_data: str
     locations: Annotated[List[str], operator.add]
     is_allowed: str
+    next: str              # The router's decision ('scholar', 'scout', or 'both')
     final_topic: str       # To pass from synthesizer to DB node
     final_content: str     # To pass from synthesizer to DB and Entity node
     entities: dict         # Contains people, organizations, countries
@@ -80,9 +81,10 @@ def router_node(state: AgentState):
     system_prompt = (
         "You are a sophisticated routing system for a Defense AI. "
         "Classify the user's latest query into one of three categories based on the conversation history:\n"
-        "1. 'scout' -> Real-time info, news, current events.\n"
-        "2. 'scholar' -> Historical treaties, defense doctrines, official reports.\n"
-        "3. 'both' -> Requires connecting past documents with live news.\n"
+        "1. 'scout' -> STRICTLY for breaking news, current events, or live updates happening right now.\n"
+        "2. 'scholar' -> The user is asking about historical facts, defense doctrines, treaties, OR the user has pasted a quote/excerpt from a document.\n"
+        "3. 'both' -> Use this if the query contains complex geopolitical claims, academic analysis, or if you are unsure.\n"
+        "CRITICAL: If the user provides a dense quote, detailed geopolitical claim, or academic excerpt, ALWAYS return 'scholar' or 'both' even if they don't explicitly mention 'document' or 'PDF'.\n"
         "Return ONLY the category name (scout, scholar, or both)."
     )
     
@@ -187,8 +189,8 @@ def database_writer_node(state: AgentState):
     entities = state.get('entities', {})
 
     with SessionLocal() as db:
-        crud = CRUD(db)
-        crud.save_briefing(
+        save_briefing(
+            db=db,
             topic=topic, 
             content=content, 
             locations=places_found,
@@ -226,9 +228,27 @@ workflow.add_conditional_edges(
     }
 )
 
-workflow.add_edge("router", "scout")
-workflow.add_edge("router", "scholar")
-workflow.add_edge("router", "cartographer")
+def route_tools(state: AgentState):
+    decision = state.get("next", "both")
+    if decision == "scout":
+        return ["scout", "cartographer"]
+    elif decision == "scholar":
+        return ["scholar"]
+    else:
+        return ["scout", "scholar", "cartographer"]
+
+# Remove the hardcoded edges:
+# workflow.add_edge("router", "scout")
+# workflow.add_edge("router", "scholar")
+# workflow.add_edge("router", "cartographer")
+
+# And replace with conditional edges pointing to the dynamic list of tools
+workflow.add_conditional_edges(
+    "router",
+    route_tools,
+    ["scout", "scholar", "cartographer"]
+)
+
 workflow.add_edge("scout", "synthesizer")
 workflow.add_edge("scholar", "synthesizer")
 workflow.add_edge("cartographer", "synthesizer")

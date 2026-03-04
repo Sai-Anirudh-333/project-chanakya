@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Settings, X, Upload } from "lucide-react";
 import MapWrapper from "../components/MapWrapper";
 import BriefingArchive from "../components/BriefingArchive";
 import EntityTimeline from "../components/EntityTimeline";
+import StandingOrders from "../components/StandingOrders";
+import DocumentUpload from "../components/DocumentUpload";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -14,6 +17,8 @@ export default function Home() {
   const [scholarFeed, setScholarFeed] = useState<string>("");
   const [forecast, setForecast] = useState<any>(null);
   const [isForecasting, setIsForecasting] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
 
   const handleSend = async () => {
     if (!query) return;
@@ -136,7 +141,7 @@ export default function Home() {
           <h1 className="text-2xl font-bold tracking-widest terminal-text">PROJECT CHANAKYA</h1>
           <p className="text-xs opacity-50 font-mono tracking-tighter">OSINT / STRATEGIC DECISION SUPPORT / v1.0</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
           <div className="flex flex-col items-end">
             <span className="text-[10px] opacity-60">SYSTEM STATUS</span>
             <span className="text-xs terminal-text animate-pulse">OPERATIONAL</span>
@@ -150,12 +155,21 @@ export default function Home() {
       {/* MAIN GRID */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6">
         
-        {/* LEFT COLUMN: INTEL FEED */}
+        {/* LEFT COLUMN: INTEL FEED & SETTINGS */}
         <div className="md:col-span-3 flex flex-col gap-6">
-          <section className="glass-card rounded-lg p-4 border-t border-white/5 h-[40vh] flex flex-col">
-            <h2 className="text-sm font-bold mb-4 opacity-70 flex items-center gap-2 shrink-0">
-              <span className="w-2 h-2 bg-intel-amber rounded-full" /> SCOUT FEED
-            </h2>
+          <section className="glass-card rounded-lg p-4 h-[40vh] flex flex-col">
+            <div className="flex justify-between items-center mb-4 shrink-0 border-b border-intel-amber/10 pb-2">
+              <h2 className="text-sm font-bold opacity-70 flex items-center gap-2">
+                <span className="w-2 h-2 bg-intel-amber rounded-full" /> SCOUT FEED
+              </h2>
+              <button 
+                onClick={() => setShowSettings(true)}
+                className="text-intel-amber/50 hover:text-intel-amber transition-colors p-1"
+                title="Configure Directives"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            </div>
             <div className="flex-1 space-y-4 font-mono text-xs opacity-60 overflow-y-auto custom-scrollbar pr-2">
               {scoutFeed.length === 0 ? (
                 <div className="opacity-50 italic text-center py-10">Awaiting surveillance intercept...</div>
@@ -178,7 +192,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="glass-card rounded-lg p-4 border-t border-white/5 h-[40vh] flex flex-col overflow-hidden">
+          <section className="glass-card rounded-lg p-4 h-[40vh] flex flex-col overflow-hidden">
              <EntityTimeline />
           </section>
         </div>
@@ -281,9 +295,18 @@ export default function Home() {
         {/* RIGHT COLUMN: REPOSITORY */}
         <div className="md:col-span-3 flex flex-col gap-6">
           <section className="glass-card rounded-lg p-4 h-[40vh] flex flex-col">
-            <h2 className="text-sm font-bold mb-4 opacity-70 flex items-center gap-2 shrink-0">
-              <span className="w-2 h-2 bg-terminal rounded-full" /> SCHOLAR INTEL
-            </h2>
+            <div className="flex justify-between items-center mb-4 shrink-0 border-b border-terminal/10 pb-2">
+              <h2 className="text-sm font-bold opacity-70 flex items-center gap-2">
+                <span className="w-2 h-2 bg-terminal rounded-full" /> SCHOLAR INTEL
+              </h2>
+              <button 
+                onClick={() => setShowUpload(true)}
+                className="text-terminal/50 hover:text-terminal transition-colors p-1"
+                title="Upload Context Document"
+              >
+                <Upload className="w-4 h-4" />
+              </button>
+            </div>
             
             <div className="flex-1 space-y-3 overflow-y-auto font-mono text-[10px] custom-scrollbar pr-2 opacity-70">
               {!scholarFeed ? (
@@ -301,6 +324,28 @@ export default function Home() {
         </div>
 
       </div>
+
+      {/* SETTINGS MODAL */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="relative max-w-2xl w-full">
+            <button 
+              onClick={() => setShowSettings(false)} 
+              className="absolute -top-10 right-0 text-slate-400 hover:text-white flex items-center gap-2 text-sm font-mono transition-colors"
+            >
+              CLOSE <X className="w-4 h-4" />
+            </button>
+            <StandingOrders />
+          </div>
+        </div>
+      )}
+
+      {/* UPLOAD MODAL */}
+      {showUpload && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <DocumentUpload onClose={() => setShowUpload(false)} />
+        </div>
+      )}
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
